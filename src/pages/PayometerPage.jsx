@@ -45,7 +45,14 @@ export default function PayometerPage() {
         .limit(200),
     ])
 
-    if (pmRes.error || !pmRes.data) { navigate('/'); return }
+    if (pmRes.error || !pmRes.data) {
+      // Membership may not have propagated yet (e.g. coming from JoinPage).
+      // Wait 1s and retry once before giving up.
+      await new Promise(r => setTimeout(r, 1000))
+      const retry = await supabase.from('payometers').select('*').eq('id', id).single()
+      if (retry.error || !retry.data) { navigate('/'); return }
+      pmRes.data = retry.data
+    }
     setPayometer(pmRes.data)
 
     const mems = memRes.data ?? []
