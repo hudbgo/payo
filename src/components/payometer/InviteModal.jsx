@@ -5,7 +5,7 @@ export default function InviteModal({ payometer, onClose }) {
   const [copied, setCopied] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
 
-  const inviteUrl = `${window.location.origin}/join/${payometer.invite_code}`
+  const inviteUrl = `${window.location.origin}${window.location.pathname}#/join/${payometer.invite_code}`
 
   async function copyLink() {
     await navigator.clipboard.writeText(inviteUrl)
