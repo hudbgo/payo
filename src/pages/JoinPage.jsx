@@ -99,8 +99,8 @@ export default function JoinPage() {
             {!user ? (
               <div className="space-y-3">
                 <p className="text-sm text-[#8E8E93]">Necesitas una cuenta para unirte.</p>
-                <Link to={`/register`} className="btn-primary block">Crear cuenta</Link>
-                <Link to={`/login`} className="btn-secondary block">Iniciar sesión</Link>
+                <Link to={`/register?redirect=/join/${code}`} className="btn-primary block">Crear cuenta</Link>
+                <Link to={`/login?redirect=/join/${code}`} className="btn-secondary block">Iniciar sesión</Link>
               </div>
             ) : (
               <button onClick={handleJoin} className="btn-primary w-full">
