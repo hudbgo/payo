@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff } from 'lucide-react'
 
 export default function RegisterPage() {
   const { signUp } = useAuth()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,6 +24,8 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await signUp(email, password, username)
+      // Save redirect so AuthContext or LoginPage can pick it up after email confirmation
+      if (redirect !== '/') sessionStorage.setItem('postLoginRedirect', redirect)
       setSuccess(true)
     } catch (err) {
       if (err.message.includes('already registered')) {
@@ -43,7 +48,12 @@ export default function RegisterPage() {
             Te hemos enviado un enlace de confirmación a <strong className="text-[#F2F2F7]">{email}</strong>.
             Confírmalo para activar tu cuenta.
           </p>
-          <Link to="/login" className="btn-primary inline-block mt-6">
+          {redirect !== '/' && (
+            <p className="text-[#6C6C70] text-xs mt-3">
+              Tras confirmar, vuelve al enlace de invitación para unirte al grupo.
+            </p>
+          )}
+          <Link to={`/login${redirect !== '/' ? `?redirect=${redirect}` : ''}`} className="btn-primary inline-block mt-6">
             Ir al inicio de sesión
           </Link>
         </div>
@@ -120,7 +130,7 @@ export default function RegisterPage() {
 
         <div className="mt-8 text-center text-sm text-[#6C6C70]">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-accent font-semibold hover:underline">
+          <Link to={`/login${redirect !== '/' ? `?redirect=${redirect}` : ''}`} className="text-accent font-semibold hover:underline">
             Iniciar sesión
           </Link>
         </div>
