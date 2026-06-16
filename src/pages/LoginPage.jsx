@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const { signIn } = useAuth()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -17,6 +20,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signIn(email, password)
+      navigate(redirect, { replace: true })
     } catch (err) {
       setError(err.message === 'Invalid login credentials'
         ? 'Email o contraseña incorrectos.'
@@ -91,7 +95,7 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center text-sm text-[#6C6C70]">
           ¿No tienes cuenta?{' '}
-          <Link to="/register" className="text-accent font-semibold hover:underline">
+          <Link to={`/register${redirect !== '/' ? `?redirect=${redirect}` : ''}`} className="text-accent font-semibold hover:underline">
             Regístrate
           </Link>
         </div>
