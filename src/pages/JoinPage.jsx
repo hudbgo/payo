@@ -5,17 +5,21 @@ import { useAuth } from '../context/AuthContext'
 
 export default function JoinPage() {
   const { code } = useParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const [status, setStatus] = useState('loading') // loading | found | joined | error | already
+  const [status, setStatus] = useState('loading')
   const [payometer, setPayometer] = useState(null)
   const [error, setError] = useState('')
 
+  // Re-run whenever code OR user changes (covers the "came back after login" case)
   useEffect(() => {
+    if (authLoading) return // wait until we know if user is logged in or not
     findPayometer()
-  }, [code])
+  }, [code, user, authLoading])
 
   async function findPayometer() {
+    setStatus('loading')
+
     const { data, error } = await supabase
       .from('payometers')
       .select('*')
@@ -31,7 +35,6 @@ export default function JoinPage() {
     setPayometer(data)
 
     if (user) {
-      // Check if already member
       const { data: mem } = await supabase
         .from('memberships')
         .select('id')
@@ -39,11 +42,7 @@ export default function JoinPage() {
         .eq('user_id', user.id)
         .single()
 
-      if (mem) {
-        setStatus('already')
-      } else {
-        setStatus('found')
-      }
+      setStatus(mem ? 'already' : 'found')
     } else {
       setStatus('found')
     }
@@ -88,7 +87,7 @@ export default function JoinPage() {
           </div>
         )}
 
-        {(status === 'found') && payometer && (
+        {status === 'found' && payometer && (
           <div className="card p-8 text-center">
             <div className="text-5xl mb-4">🏆</div>
             <p className="text-[#8E8E93] text-sm mb-1">Te han invitado a</p>
