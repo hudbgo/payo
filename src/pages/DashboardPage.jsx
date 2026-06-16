@@ -29,6 +29,7 @@ export default function DashboardPage() {
       .from('memberships')
       .select(`
         payometer_id,
+        joined_at,
         payometers (
           id, name, description, created_at,
           memberships (count),
@@ -36,14 +37,17 @@ export default function DashboardPage() {
         )
       `)
       .eq('user_id', user.id)
-      .order('created_at', { foreignTable: 'payometers', ascending: false })
 
     if (!error && data) {
-      const mapped = data.map(m => {
-        const pm = m.payometers
-        const totalPoints = pm.score_events?.reduce((acc, e) => acc + e.points, 0) ?? 0
-        return { ...pm, memberCount: pm.memberships?.[0]?.count ?? 0, totalPoints }
-      })
+      const mapped = data
+        .filter(m => m.payometers) // safety: skip broken joins
+        .map(m => {
+          const pm = m.payometers
+          const totalPoints = pm.score_events?.reduce((acc, e) => acc + e.points, 0) ?? 0
+          return { ...pm, memberCount: pm.memberships?.[0]?.count ?? 0, totalPoints }
+        })
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+
       setPayometers(mapped)
     }
     setLoading(false)
@@ -124,7 +128,7 @@ function EmptyState() {
       <div className="text-5xl mb-4 animate-float inline-block">🏆</div>
       <h3 className="font-semibold text-lg mb-1">Ningún payómetro aún</h3>
       <p className="text-[#8E8E93] text-sm mb-6">
-        Crea uno e invita a tus amigos para empezar a competir por quien es el más payo.
+        Crea uno e invita a tus amigos, o pídele a alguien que te mande un enlace de invitación.
       </p>
       <Link to="/create" className="btn-primary inline-flex items-center gap-2">
         <Plus size={16} />
