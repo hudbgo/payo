@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: #0A0A0F;
+    color: #F2F2F7;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    min-height: 100dvh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3A3A3C;
+    border-radius: 2px;
+  }
+
+  input, textarea, select {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-[#1C1C1E] rounded-2xl border border-white/5;
+  }
+
+  .card-raised {
+    @apply bg-[#2C2C2E] rounded-2xl border border-white/5;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-white font-semibold rounded-xl px-5 py-3 
+           active:scale-95 transition-all duration-150 
+           disabled:opacity-40 disabled:cursor-not-allowed
+           hover:bg-[#FF524A];
+  }
+
+  .btn-secondary {
+    @apply bg-[#2C2C2E] text-[#F2F2F7] font-semibold rounded-xl px-5 py-3 
+           border border-white/10 active:scale-95 transition-all duration-150
+           hover:bg-[#3A3A3C];
+  }
+
+  .btn-ghost {
+    @apply text-accent font-semibold rounded-xl px-5 py-3 
+           active:scale-95 transition-all duration-150
+           hover:bg-accent/10;
+  }
+
+  .input-field {
+    @apply bg-[#2C2C2E] border border-white/10 rounded-xl px-4 py-3
+           text-[#F2F2F7] placeholder-[#6C6C70] w-full
+           focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50
+           transition-all duration-200;
+  }
+
+  .label {
+    @apply text-sm font-medium text-[#8E8E93] mb-1.5 block;
+  }
+
+  .payo-badge {
+    @apply inline-flex items-center gap-1 bg-payellow-soft text-payellow 
+           text-xs font-bold px-2.5 py-1 rounded-full;
+  }
+
+  .rank-crown-1 { @apply text-[#FFD60A]; }
+  .rank-crown-2 { @apply text-[#C0C0C0]; }
+  .rank-crown-3 { @apply text-[#CD7F32]; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1C1C1E 25%, #2C2C2E 50%, #1C1C1E 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
