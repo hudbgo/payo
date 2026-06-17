@@ -147,15 +147,14 @@ export default function DashboardPage() {
                       Invitar amigos
                     </button>
                     <div className="h-px bg-white/5" />
-                    {!isAdmin && (
-                      <button
-                        onClick={() => { setConfirm({ id: pm.id, name: pm.name, action: 'leave' }); setMenuOpen(null) }}
-                        className="flex items-center gap-2 w-full px-4 py-3 text-sm hover:bg-[#3A3A3C] transition-colors text-[#F2F2F7]"
-                      >
-                        <LogOut size={15} className="text-[#8E8E93]" />
-                        Salirse del grupo
-                      </button>
-                    )}
+                    <button
+                      onClick={() => { setConfirm({ id: pm.id, name: pm.name, action: 'leave' }); setMenuOpen(null) }}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-sm hover:bg-[#3A3A3C] transition-colors text-[#F2F2F7]"
+                    >
+                      <LogOut size={15} className="text-[#8E8E93]" />
+                      Salirse del grupo
+                    </button>
+                    <div className="h-px bg-white/5" />
                     {isAdmin && (
                       <button
                         onClick={() => { setConfirm({ id: pm.id, name: pm.name, action: 'delete' }); setMenuOpen(null) }}
