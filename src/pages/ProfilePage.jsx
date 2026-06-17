@@ -1,16 +1,10 @@
 import { useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { User, Lock, Check, AlertCircle, RefreshCw } from 'lucide-react'
-
-const STYLES = ['notionists', 'avataaars', 'bottts', 'pixel-art', 'lorelei', 'micah', 'adventurer', 'fun-emoji', 'icons']
+import { User, Lock, Check, AlertCircle, Pencil, RefreshCw, X } from 'lucide-react'
 
 function randomSeeds(count = 9) {
   return Array.from({ length: count }, () => Math.random().toString(36).slice(2, 8))
-}
-
-function avatarUrl(style, seed) {
-  return `https://api.dicebear.com/8.x/${style}/svg?seed=${seed}`
 }
 
 export default function ProfilePage() {
@@ -26,28 +20,25 @@ export default function ProfilePage() {
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState(null)
 
-  const [selectedStyle, setSelectedStyle] = useState('notionists')
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [seeds, setSeeds] = useState(() => randomSeeds())
-  const [selectedAvatar, setSelectedAvatar] = useState(null) // { style, seed }
+  const [selectedSeed, setSelectedSeed] = useState(null)
   const [avatarLoading, setAvatarLoading] = useState(false)
-  const [avatarMsg, setAvatarMsg] = useState(null)
 
   const regenerate = useCallback(() => {
     setSeeds(randomSeeds())
-    setSelectedAvatar(null)
-    setAvatarMsg(null)
+    setSelectedSeed(null)
   }, [])
 
   async function handleSaveAvatar() {
-    if (!selectedAvatar) return
+    if (!selectedSeed) return
     setAvatarLoading(true)
-    setAvatarMsg(null)
     try {
-      await updateProfile({ avatar_url: avatarUrl(selectedAvatar.style, selectedAvatar.seed) })
-      setAvatarMsg({ type: 'ok', text: 'Avatar guardado.' })
-      setSelectedAvatar(null)
+      await updateProfile({ avatar_url: `https://api.dicebear.com/8.x/notionists/svg?seed=${selectedSeed}` })
+      setPickerOpen(false)
+      setSelectedSeed(null)
     } catch (err) {
-      setAvatarMsg({ type: 'error', text: err.message })
+      console.error(err)
     } finally {
       setAvatarLoading(false)
     }
@@ -55,34 +46,22 @@ export default function ProfilePage() {
 
   async function handleUpdateUsername(e) {
     e.preventDefault()
-    if (username.trim().length < 3) {
-      setUsernameMsg({ type: 'error', text: 'Mínimo 3 caracteres.' })
-      return
-    }
-    setUsernameLoading(true)
-    setUsernameMsg(null)
+    if (username.trim().length < 3) { setUsernameMsg({ type: 'error', text: 'Mínimo 3 caracteres.' }); return }
+    setUsernameLoading(true); setUsernameMsg(null)
     try {
       await updateProfile({ username: username.trim() })
       setUsernameMsg({ type: 'ok', text: 'Nombre actualizado.' })
     } catch (err) {
       setUsernameMsg({ type: 'error', text: err.message })
     } finally {
-      setUsernameLoading(false)
-    }
+      setUsernameLoading(false) }
   }
 
   async function handleUpdatePassword(e) {
     e.preventDefault()
-    if (newPassword.length < 6) {
-      setPasswordMsg({ type: 'error', text: 'La contraseña debe tener al menos 6 caracteres.' })
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ type: 'error', text: 'Las contraseñas no coinciden.' })
-      return
-    }
-    setPasswordLoading(true)
-    setPasswordMsg(null)
+    if (newPassword.length < 6) { setPasswordMsg({ type: 'error', text: 'La contraseña debe tener al menos 6 caracteres.' }); return }
+    if (newPassword !== confirmPassword) { setPasswordMsg({ type: 'error', text: 'Las contraseñas no coinciden.' }); return }
+    setPasswordLoading(true); setPasswordMsg(null)
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword })
       if (signInError) throw new Error('La contraseña actual es incorrecta.')
@@ -104,75 +83,64 @@ export default function ProfilePage() {
         <p className="text-[#8E8E93] text-sm mt-0.5">{user?.email}</p>
       </div>
 
-      {/* Current avatar */}
+      {/* Avatar */}
       <div className="card p-5 flex items-center gap-4">
-        <img
-          src={profile?.avatar_url ?? avatarUrl('notionists', profile?.username)}
-          alt={profile?.username}
-          className="w-16 h-16 rounded-full bg-[#2C2C2E]"
-        />
+        <div className="relative shrink-0">
+          <img
+            src={profile?.avatar_url ?? `https://api.dicebear.com/8.x/notionists/svg?seed=${profile?.username}`}
+            alt={profile?.username}
+            className="w-16 h-16 rounded-full bg-[#2C2C2E]"
+          />
+          <button
+            onClick={() => setPickerOpen(true)}
+            className="absolute -bottom-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg"
+          >
+            <Pencil size={11} className="text-white" />
+          </button>
+        </div>
         <div>
           <p className="font-semibold">{profile?.username}</p>
-          <p className="text-[#8E8E93] text-sm">Tu avatar actual</p>
+          <p className="text-[#8E8E93] text-sm">Pulsa el lápiz para cambiar avatar</p>
         </div>
       </div>
 
-      {/* Avatar picker */}
-      <div className="card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-base">🎨</span>
-          <h2 className="font-semibold">Cambiar avatar</h2>
-        </div>
-
-        {/* Style selector */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
-          {STYLES.map(s => (
-            <button
-              key={s}
-              onClick={() => { setSelectedStyle(s); setSelectedAvatar(null); setAvatarMsg(null) }}
-              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedStyle === s ? 'bg-accent text-white' : 'bg-[#2C2C2E] text-[#8E8E93] hover:text-[#F2F2F7]'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {seeds.map(seed => {
-            const url = avatarUrl(selectedStyle, seed)
-            const isSelected = selectedAvatar?.seed === seed && selectedAvatar?.style === selectedStyle
-            return (
-              <button
-                key={seed}
-                onClick={() => setSelectedAvatar({ style: selectedStyle, seed })}
-                className={`rounded-xl p-2 border-2 transition-all ${
-                  isSelected ? 'border-accent bg-accent/10' : 'border-transparent bg-[#2C2C2E] hover:border-white/20'
-                }`}
-              >
-                <img src={url} alt="avatar" className="w-full aspect-square rounded-lg" />
+      {/* Avatar picker modal */}
+      {pickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="card p-5 w-full max-w-sm animate-scale-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Elige un avatar</h3>
+              <button onClick={() => { setPickerOpen(false); setSelectedSeed(null) }} className="text-[#6C6C70] hover:text-[#F2F2F7]">
+                <X size={18} />
               </button>
-            )
-          })}
-        </div>
+            </div>
 
-        <div className="flex gap-3">
-          <button onClick={regenerate} className="btn-secondary flex items-center gap-2 flex-1">
-            <RefreshCw size={15} />
-            Generar más
-          </button>
-          <button
-            onClick={handleSaveAvatar}
-            disabled={!selectedAvatar || avatarLoading}
-            className="btn-primary flex-1"
-          >
-            {avatarLoading ? 'Guardando…' : 'Usar este'}
-          </button>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {seeds.map(seed => (
+                <button
+                  key={seed}
+                  onClick={() => setSelectedSeed(seed)}
+                  className={`rounded-xl p-2 border-2 transition-all ${
+                    selectedSeed === seed ? 'border-accent bg-accent/10' : 'border-transparent bg-[#2C2C2E] hover:border-white/20'
+                  }`}
+                >
+                  <img src={`https://api.dicebear.com/8.x/notionists/svg?seed=${seed}`} alt="avatar" className="w-full aspect-square rounded-lg" />
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={regenerate} className="btn-secondary flex items-center gap-2 flex-1">
+                <RefreshCw size={14} />
+                Otros 9
+              </button>
+              <button onClick={handleSaveAvatar} disabled={!selectedSeed || avatarLoading} className="btn-primary flex-1">
+                {avatarLoading ? 'Guardando…' : 'Usar este'}
+              </button>
+            </div>
+          </div>
         </div>
-        {avatarMsg && <div className="mt-3"><Msg {...avatarMsg} /></div>}
-      </div>
+      )}
 
       {/* Username */}
       <div className="card p-5">
@@ -183,13 +151,7 @@ export default function ProfilePage() {
         <form onSubmit={handleUpdateUsername} className="space-y-3">
           <div>
             <label className="label">Nombre</label>
-            <input
-              type="text"
-              className="input-field"
-              value={username}
-              onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-              maxLength={20}
-            />
+            <input type="text" className="input-field" value={username} onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} maxLength={20} />
           </div>
           {usernameMsg && <Msg {...usernameMsg} />}
           <button type="submit" disabled={usernameLoading || username === profile?.username} className="btn-primary w-full">
