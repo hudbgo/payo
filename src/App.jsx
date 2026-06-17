@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage'
 import CreatePayometerPage from './pages/CreatePayometerPage'
 import PayometerPage from './pages/PayometerPage'
 import JoinPage from './pages/JoinPage'
+import ProfilePage from './pages/ProfilePage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -94,6 +95,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="create" element={<CreatePayometerPage />} />
             <Route path="payometer/:id" element={<PayometerPage />} />
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Routes>
       </HashRouter>
