@@ -1,7 +1,17 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { User, Lock, Check, AlertCircle } from 'lucide-react'
+import { User, Lock, Check, AlertCircle, RefreshCw } from 'lucide-react'
+
+const STYLES = ['notionists', 'avataaars', 'bottts', 'pixel-art', 'lorelei', 'micah', 'adventurer', 'fun-emoji', 'icons']
+
+function randomSeeds(count = 9) {
+  return Array.from({ length: count }, () => Math.random().toString(36).slice(2, 8))
+}
+
+function avatarUrl(style, seed) {
+  return `https://api.dicebear.com/8.x/${style}/svg?seed=${seed}`
+}
 
 export default function ProfilePage() {
   const { user, profile, updateProfile } = useAuth()
@@ -15,6 +25,33 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState(null)
+
+  const [selectedStyle, setSelectedStyle] = useState('notionists')
+  const [seeds, setSeeds] = useState(() => randomSeeds())
+  const [selectedAvatar, setSelectedAvatar] = useState(null) // { style, seed }
+  const [avatarLoading, setAvatarLoading] = useState(false)
+  const [avatarMsg, setAvatarMsg] = useState(null)
+
+  const regenerate = useCallback(() => {
+    setSeeds(randomSeeds())
+    setSelectedAvatar(null)
+    setAvatarMsg(null)
+  }, [])
+
+  async function handleSaveAvatar() {
+    if (!selectedAvatar) return
+    setAvatarLoading(true)
+    setAvatarMsg(null)
+    try {
+      await updateProfile({ avatar_url: avatarUrl(selectedAvatar.style, selectedAvatar.seed) })
+      setAvatarMsg({ type: 'ok', text: 'Avatar guardado.' })
+      setSelectedAvatar(null)
+    } catch (err) {
+      setAvatarMsg({ type: 'error', text: err.message })
+    } finally {
+      setAvatarLoading(false)
+    }
+  }
 
   async function handleUpdateUsername(e) {
     e.preventDefault()
@@ -47,20 +84,12 @@ export default function ProfilePage() {
     setPasswordLoading(true)
     setPasswordMsg(null)
     try {
-      // Verify current password first
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      })
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword })
       if (signInError) throw new Error('La contraseña actual es incorrecta.')
-
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
-
       setPasswordMsg({ type: 'ok', text: 'Contraseña actualizada.' })
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
     } catch (err) {
       setPasswordMsg({ type: 'error', text: err.message })
     } finally {
@@ -75,17 +104,74 @@ export default function ProfilePage() {
         <p className="text-[#8E8E93] text-sm mt-0.5">{user?.email}</p>
       </div>
 
-      {/* Avatar */}
+      {/* Current avatar */}
       <div className="card p-5 flex items-center gap-4">
         <img
-          src={profile?.avatar_url ?? `https://api.dicebear.com/8.x/notionists/svg?seed=${profile?.username}`}
+          src={profile?.avatar_url ?? avatarUrl('notionists', profile?.username)}
           alt={profile?.username}
           className="w-16 h-16 rounded-full bg-[#2C2C2E]"
         />
         <div>
           <p className="font-semibold">{profile?.username}</p>
-          <p className="text-[#8E8E93] text-sm">Avatar generado automáticamente</p>
+          <p className="text-[#8E8E93] text-sm">Tu avatar actual</p>
         </div>
+      </div>
+
+      {/* Avatar picker */}
+      <div className="card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-base">🎨</span>
+          <h2 className="font-semibold">Cambiar avatar</h2>
+        </div>
+
+        {/* Style selector */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
+          {STYLES.map(s => (
+            <button
+              key={s}
+              onClick={() => { setSelectedStyle(s); setSelectedAvatar(null); setAvatarMsg(null) }}
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                selectedStyle === s ? 'bg-accent text-white' : 'bg-[#2C2C2E] text-[#8E8E93] hover:text-[#F2F2F7]'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Grid */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {seeds.map(seed => {
+            const url = avatarUrl(selectedStyle, seed)
+            const isSelected = selectedAvatar?.seed === seed && selectedAvatar?.style === selectedStyle
+            return (
+              <button
+                key={seed}
+                onClick={() => setSelectedAvatar({ style: selectedStyle, seed })}
+                className={`rounded-xl p-2 border-2 transition-all ${
+                  isSelected ? 'border-accent bg-accent/10' : 'border-transparent bg-[#2C2C2E] hover:border-white/20'
+                }`}
+              >
+                <img src={url} alt="avatar" className="w-full aspect-square rounded-lg" />
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={regenerate} className="btn-secondary flex items-center gap-2 flex-1">
+            <RefreshCw size={15} />
+            Generar más
+          </button>
+          <button
+            onClick={handleSaveAvatar}
+            disabled={!selectedAvatar || avatarLoading}
+            className="btn-primary flex-1"
+          >
+            {avatarLoading ? 'Guardando…' : 'Usar este'}
+          </button>
+        </div>
+        {avatarMsg && <div className="mt-3"><Msg {...avatarMsg} /></div>}
       </div>
 
       {/* Username */}
@@ -121,36 +207,15 @@ export default function ProfilePage() {
         <form onSubmit={handleUpdatePassword} className="space-y-3">
           <div>
             <label className="label">Contraseña actual</label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="••••••••"
-              value={currentPassword}
-              onChange={e => setCurrentPassword(e.target.value)}
-              required
-            />
+            <input type="password" className="input-field" placeholder="••••••••" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
           </div>
           <div>
             <label className="label">Nueva contraseña</label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="Mínimo 6 caracteres"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              required
-            />
+            <input type="password" className="input-field" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
           </div>
           <div>
             <label className="label">Confirmar nueva contraseña</label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              required
-            />
+            <input type="password" className="input-field" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
           </div>
           {passwordMsg && <Msg {...passwordMsg} />}
           <button type="submit" disabled={passwordLoading} className="btn-primary w-full">
