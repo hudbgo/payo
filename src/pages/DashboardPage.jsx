@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { Plus, Users, Trophy, ChevronRight, MoreVertical, LogOut, Trash2, X, Share2 } from 'lucide-react'
+import { Plus, Users, Trophy, MoreVertical, LogOut, Trash2, X, Share2 } from 'lucide-react'
 import InviteModal from '../components/payometer/InviteModal'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -97,45 +97,40 @@ export default function DashboardPage() {
           {payometers.map(pm => {
             const isAdmin = pm.myRole === 'admin'
             return (
-              <div key={pm.id} className="relative">
+              <div key={pm.id} className="relative card flex items-center hover:bg-[#2C2C2E] transition-colors">
                 <Link
                   to={`/payometer/${pm.id}`}
-                  className="card block p-4 hover:bg-[#2C2C2E] transition-colors active:scale-[0.98] duration-150 pr-12"
+                  className="flex-1 p-4 min-w-0"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">🏆</span>
-                        <h3 className="font-semibold truncate">{pm.name}</h3>
-                        {isAdmin && <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded-full font-medium shrink-0">admin</span>}
-                      </div>
-                      {pm.description && (
-                        <p className="text-[#8E8E93] text-sm mt-0.5 truncate">{pm.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-xs text-[#6C6C70]">
-                          <Users size={12} />
-                          {pm.memberCount} miembro{pm.memberCount !== 1 ? 's' : ''}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-[#6C6C70]">
-                          <Trophy size={12} />
-                          {pm.totalPoints} pts totales
-                        </span>
-                        <span className="text-xs text-[#6C6C70]">
-                          {formatDistanceToNow(new Date(pm.created_at), { addSuffix: true, locale: es })}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight size={18} className="text-[#6C6C70] shrink-0 ml-2" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🏆</span>
+                    <h3 className="font-semibold truncate">{pm.name}</h3>
+                    {isAdmin && <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded-full font-medium shrink-0">admin</span>}
+                  </div>
+                  {pm.description && (
+                    <p className="text-[#8E8E93] text-sm mt-0.5 truncate">{pm.description}</p>
+                  )}
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="flex items-center gap-1 text-xs text-[#6C6C70]">
+                      <Users size={12} />
+                      {pm.memberCount} miembro{pm.memberCount !== 1 ? 's' : ''}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-[#6C6C70]">
+                      <Trophy size={12} />
+                      {pm.totalPoints} pts totales
+                    </span>
+                    <span className="text-xs text-[#6C6C70]">
+                      {formatDistanceToNow(new Date(pm.created_at), { addSuffix: true, locale: es })}
+                    </span>
                   </div>
                 </Link>
 
-                {/* Menu button */}
+                {/* 3-dot menu button */}
                 <button
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setMenuOpen(menuOpen === pm.id ? null : pm.id) }}
-                  className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-[#3A3A3C] text-[#6C6C70] hover:text-[#F2F2F7] transition-colors z-10"
+                  className="shrink-0 px-4 py-6 text-[#6C6C70] hover:text-[#F2F2F7] transition-colors"
                 >
-                  <MoreVertical size={16} />
+                  <MoreVertical size={18} />
                 </button>
 
                 {/* Dropdown */}
