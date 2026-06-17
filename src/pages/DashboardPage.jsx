@@ -59,8 +59,7 @@ export default function DashboardPage() {
 
   async function handleLeave(id) {
     setActionLoading(true)
-    const { error } = await supabase.from('memberships').delete().eq('payometer_id', id).eq('user_id', user.id)
-    if (error) alert('Error al salirse: ' + error.message)
+    await supabase.from('memberships').delete().eq('payometer_id', id).eq('user_id', user.id)
     setConfirm(null)
     setActionLoading(false)
     loadPayometers()
