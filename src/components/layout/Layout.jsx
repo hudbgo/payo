@@ -83,8 +83,12 @@ export default function Layout() {
             <span className="text-[10px] font-medium">Crear</span>
           </NavLink>
           <NavLink
-            to={profile ? `/profile` : '/'}
-            className="flex flex-col items-center gap-0.5 px-6 py-2 rounded-xl text-[#6C6C70] hover:text-[#8E8E93] transition-colors"
+            to="/profile"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-0.5 px-6 py-2 rounded-xl transition-colors ${
+                isActive ? 'text-accent' : 'text-[#6C6C70] hover:text-[#8E8E93]'
+              }`
+            }
           >
             <User size={22} />
             <span className="text-[10px] font-medium">Perfil</span>
